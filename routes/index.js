@@ -2,6 +2,12 @@ var express = require('express');
 var router = express.Router();
 var config = require('../config/config');
 var request = require('request');
+var mysql = require('mysql');
+var bcrypt = require('bcrypt-nodejs');
+var connection = mysql.createConnection(config.db);
+connection.connect((error) => {
+
+});
 
 const apiBaseUrl = 'http://api.themoviedb.org/3';
 const nowPlayingUrl = apiBaseUrl + '/movie/now_playing?api_key=' + config.apiKey
@@ -9,11 +15,16 @@ const imageBaseUrl = 'http://image.tmdb.org/t/p/w300';
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
+    var message = req.query.msg;
+    if (message == "registered") {
+
+    }
     request.get(nowPlayingUrl, (error, response, movieData) => {
         var parsedData = JSON.parse(movieData);
         res.render('index', {
             parsedData: parsedData.results,
-            imageBaseUrl: imageBaseUrl
+            imageBaseUrl: imageBaseUrl,
+            message: message
         });
     });
 });
@@ -51,5 +62,59 @@ router.get('/movie/:movieId', (req, res) => {
         })
     })
 });
+
+router.get('/register', (req, res, next) => {
+    res.render('register', {
+
+    })
+})
+router.get('/login', (req, res) => {
+    res.render('login', {})
+})
+router.post('/loginProcess', (req, res) => {
+    var email = req.body.email;
+    var password = req.body.password;
+    var selectQuery = "SELECT * FROM users WHERE email = ?"
+    connection.query(selectQuery, [email], (error, results) => {
+        if (results.length == 0) {
+            console.log("these arent's the droids we are looking for");
+            res.redirect('login?msg=badUser')
+        } else {
+            console.log("this IS the droid we are looking");
+            var doTheyMatch = bcrypt.compareSync(password, results[0].password);
+            if (doTheyMatch) {
+                res.redirect('/?msg=loggedId')
+            } else {
+                res.redirect('/login?msg="tryagain')
+            }
+
+
+        }
+    })
+});
+
+router.post('/registerProcess', (req, res, nex) => {
+    // res.json(req.body);
+    var name = req.body.name;
+    var email = req.body.email;
+    var password = req.body.password;
+    var hash = bcrypt.hashSync(password);
+    console.log(hash);
+    const selectQuery = "SELECT * FROM users WHERE email = ?;";
+    connection.query(selectQuery, [email], (error, results) => {
+        if (results.length == 0) {
+            var insertQuery = "INSERT INTO users (name, email, password) VALUES (?,?,?);";
+            connection.query(insertQuery, [name, email, hash], (error) => {
+                if (error) {
+                    throw error;
+                } else {
+                    res.redirect("/?msg=registered");
+                }
+            })
+        } else {
+            res.redirect("/?msg=fail")
+        }
+    });
+})
 
 module.exports = router;

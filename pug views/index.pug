@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+html(lang="en")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        meta(http-equiv="X-UA-Compatible", content="ie=edge")
+        title Movie App
+    body
+        inlcude navbar
+        .container
+            .row
+                .col-sm-12
+                    form(id="search-form" class="form-inline" action="/search?key=pumpkin" method="post")
+                        input(type="text" placeholer="Movie Title" name="movieSearch")
+                        input(type="text" placeholder="Actor Name" name="actorSearch")
+                        input(type="submit" class="btn btn-primary")
+                .col-sm-12
+                -for(let i = 0; i < parsedData.length; i++)
+                    .col-sm-3
+                        a(href="/movie/<%parsedData[i].id")
+                            img(src="imageBaseUrl + parsedData[i].poster_path")
+                -
+                

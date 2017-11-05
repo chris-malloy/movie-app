@@ -1,0 +1,15 @@
+include head
+include navbar
+    .container
+        .row
+            .col-sm-12.text-center
+                .col-sm-12.text-danger.error
+                    form(action="/registerProcess" method="post")
+                        .col-sm-12
+                            input(type="text" name="name" placeholder="Enter your Name")
+                        .col-sm-12
+                            input(type="email" name="email" placeholder="Enter your Email")
+                        .col-sm-12
+                            input(type="password" name="password" placeholder="Enter your Password")
+                        .col-sm-12
+                            button(class="btn btn-success" type="submit") Register
