@@ -13,61 +13,30 @@ const apiBaseUrl = 'http://api.themoviedb.org/3';
 const nowPlayingUrl = apiBaseUrl + '/movie/now_playing?api_key=' + config.apiKey
 const imageBaseUrl = 'http://image.tmdb.org/t/p/w300';
 
-/* GET home page. */
+/* HOME */
 router.get('/', function(req, res, next) {
     var message = req.query.msg;
     if (message == "registered") {
-
+        message = "Congratulations! You are registered. Enjoy the site."
+    } else if (message == "fail") {
+        message = "That user/password combination is not recognized. Please re-enter."
     }
     request.get(nowPlayingUrl, (error, response, movieData) => {
         var parsedData = JSON.parse(movieData);
-        res.render('index', {
-            parsedData: parsedData.results,
-            imageBaseUrl: imageBaseUrl,
-            message: message
-        });
+        if (parsedData !== undefined) {
+            res.render('index', {
+                title: 'Movie App',
+                parsedData: parsedData.results,
+                imageBaseUrl: imageBaseUrl,
+                message: message
+            });
+        } else {
+            res.json("There was an error.")
+        }
     });
 });
 
-router.post('/search', (req, res) => {
-    request.get(nowPlayingUrl, (error, response, movieData) => {
-        var userSearchTerm = req.body.movieSearch;
-        var userSearchActor = req.body.actorSearch;
-        // req.query.key fetches query value of key from request...
-        //look to index.ejs to action value of form tag
-        var queryString = req.query.key;
-        var parsedData = JSON.parse(movieData);
-        res.render('index', {
-            parsedData: parsedData.results,
-            imageBaseUrl: imageBaseUrl
-        });
-    });
-})
-
-//if you have /: that part of th path is Wild!
-//in this case, /movie/:movieId will trigger /movie/ANYTHING
-// to access the ANYTHING, you go tot req.params.ANYTHING
-// this makes your urls cleaner
-
-router.get('/movie/:movieId', (req, res) => {
-    // res.json(req.params);
-    var movieId = req.params.movieId;
-    var thisMovieUrl = `${apiBaseUrl}/movie/${movieId}?api_Key=${config.apiKey}`
-    request.get(thisMovieUrl, (error, response, movieData) => {
-        var parsedData = JSON.parse(movieDta);
-        // res.json(parsedData);
-        res.render('single-movie', {
-            movieData: parsedData,
-            imageBaseUrl: imageBaseUrl
-        })
-    })
-});
-
-router.get('/register', (req, res, next) => {
-    res.render('register', {
-
-    })
-})
+/* LOGIN */
 router.get('/login', (req, res) => {
     res.render('login', {})
 })
@@ -87,11 +56,14 @@ router.post('/loginProcess', (req, res) => {
             } else {
                 res.redirect('/login?msg="tryagain')
             }
-
-
         }
     })
 });
+
+/* REGISTER */
+router.get('/register', (req, res, next) => {
+    res.render('register', {})
+})
 
 router.post('/registerProcess', (req, res, nex) => {
     // res.json(req.body);
@@ -116,5 +88,47 @@ router.post('/registerProcess', (req, res, nex) => {
         }
     });
 })
+
+/* FAVORITES */
+router.get('/favorites', (req, res) => {
+    var savedMovies = "SELECT savedMovies FROM favorites;";
+    res.render('favorites'), {
+        savedMovies: savedMovies,
+        imageBaseUrl: imageBaseUrl
+    }
+})
+
+/* SEARCH */
+router.post('/search', (req, res) => {
+    var userSearchTerm = req.body.movieSearch;
+    var userSearchActor = req.body.actorSearch;
+    var queryString = req.query.key;
+    var searchUrl = `${apiBaseUrl}/search/movie?query=${userSearchTerm}&api_key=${config.apiKey}`;
+    request.get(searchUrl, (error, response, movieData) => {
+        var parsedData = JSON.parse(movieData);
+        res.render('index', {
+            parsedData: parsedData.results,
+            imageBaseUrl: imageBaseUrl,
+        });
+    });
+});
+//if you have /: that part of th path is Wild!
+//in this case, /movie/:movieId will trigger /movie/ANYTHING
+// to access the ANYTHING, you go tot req.params.ANYTHING
+// this makes your urls cleaner
+
+router.get('/movie/:movieId', (req, res) => {
+    // res.json(req.params);
+    var movieId = req.params.movieId;
+    var thisMovieUrl = `${apiBaseUrl}/movie/${movieId}?api_key=${config.apiKey}`;
+    request.get(thisMovieUrl, (error, response, movieData) => {
+        var parsedData = JSON.parse(movieData);
+        // res.json(parsedData);
+        res.render('single-movie', {
+            movieData: parsedData,
+            imageBaseUrl: imageBaseUrl
+        })
+    })
+});
 
 module.exports = router;
